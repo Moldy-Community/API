@@ -1,4 +1,4 @@
-module github.com/Moldy-Community/moldy-api
+module moldy-api
 
 go 1.15
 
