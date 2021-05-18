@@ -11,9 +11,7 @@ func main() {
 	r := gin.Default()
 
 	routes.Router(r)
-	port, err := os.Getenv("PORT")
-	if err != nil {
-		port = "3000"
-	}
+	port := os.Getenv("PORT")
+	port = "3000"
 	r.Run(":" + port)
 }
