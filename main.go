@@ -1,9 +1,8 @@
 package main
 
 import (
-	"log"
-
 	routes "moldy-api/routes"
+	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -12,8 +11,9 @@ func main() {
 	r := gin.Default()
 
 	routes.Router(r)
-
-	if err := r.Run(":3000"); err != nil {
-		log.Fatal(err.Error())
+	port, err := os.Getenv("PORT")
+	if err != nil {
+		port = "3000"
 	}
+	r.Run(":" + port)
 }
