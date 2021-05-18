@@ -13,7 +13,7 @@ func main() {
 
 	routes.Router(r)
 
-	if err := r.Run("localhost:3000"); err != nil {
+	if err := r.Run(":3000"); err != nil {
 		log.Fatal(err.Error())
 	}
 }
