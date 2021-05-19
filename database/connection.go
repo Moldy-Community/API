@@ -17,7 +17,7 @@ func GetCollection(collection string) *mongo.Collection {
 
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(URI))
 
-	utils.CheckErrors(err, "1", "The connection to the database failed", "Please check if the URI value in the .env is valid")
+	utils.CheckErrors(err, "code 1", "The connection to the database failed", "Please check if the URI value in the .env is valid")
 
 	database := client.Database("moldy-api")
 

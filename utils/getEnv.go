@@ -9,7 +9,7 @@ import (
 func GetEnv(key string) string {
 	err := godotenv.Load()
 
-	CheckErrors(err, "1", "Error loading the .env file", "Create a .env file and write there the value, something like this:\nVALUE_EXAMPLE=ThisIsTheValue")
+	CheckErrors(err, "code 6", "Error loading the .env file", "Create a .env file and write there the value, something like this:\nVALUE_EXAMPLE=ThisIsTheValue")
 
 	value := os.Getenv(key)
 
