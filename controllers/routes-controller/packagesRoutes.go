@@ -5,6 +5,9 @@ import (
 	"moldy-api/database"
 	"moldy-api/models"
 	"moldy-api/utils"
+	"net/url"
+	"regexp"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -47,7 +50,67 @@ func NewPackage(c *gin.Context) {
 		return
 	}
 
-	_, err := packageCollection.InsertOne(context.Background(), reqBody)
+	re := regexp.MustCompile(`[^0-9|.]`)
+
+	invalid := re.MatchString(reqBody.Version)
+
+	if invalid || strings.HasPrefix(reqBody.Version, ".") {
+		c.JSON(406, gin.H{
+			"error":   true,
+			"message": "Please provide a valid version (Only numbers and dot's)",
+		})
+		return
+	}
+
+	if len(reqBody.Version) > 5 {
+		c.JSON(411, gin.H{
+			"error":   true,
+			"message": "The length is too long",
+		})
+		return
+	} else if len(reqBody.Version) < 3 {
+		c.JSON(411, gin.H{
+			"error":   true,
+			"message": "The version is too short, remind that the format is X.Y or X.Y.Z",
+		})
+		return
+	}
+
+	if reqBody.Author == "" || reqBody.Description == "" || reqBody.Name == "" || reqBody.Url == "" {
+		c.JSON(411, gin.H{
+			"error":   true,
+			"message": "Please fill all blanks",
+		})
+		return
+	}
+
+	if len(reqBody.Author) >= 30 {
+		c.JSON(411, gin.H{
+			"error":   true,
+			"message": "Please enter a valid author with less of 30 characters",
+		})
+		return
+	}
+
+	if len(reqBody.Description) >= 150 {
+		c.JSON(411, gin.H{
+			"error":   true,
+			"message": "The description is too long and have more of 150 characters, please write it more short",
+		})
+		return
+	}
+
+	u, err := url.Parse(reqBody.Url)
+
+	if err != nil || u.Host == "" || u.Scheme == "" {
+		c.JSON(406, gin.H{
+			"error":   true,
+			"message": "The URL is not valid",
+		})
+		return
+	}
+
+	_, err = packageCollection.InsertOne(context.Background(), reqBody)
 
 	utils.CheckErrors(err, "code 4", "Failed to save in the collection", "Unknown solution")
 
