@@ -7,6 +7,7 @@ import (
 )
 
 func Router(route *gin.Engine) {
+	r := gin.Default()
 	main := route.Group("/")
 	{
 		main.GET("/", routes.GetResponse)
@@ -17,4 +18,6 @@ func Router(route *gin.Engine) {
 		packages.GET("/all", routes.GetAll)
 		packages.POST("/new", routes.NewPackage)
 	}
+
+	r.NoRoute(routes.NotFound)
 }

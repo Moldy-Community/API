@@ -8,3 +8,10 @@ func GetResponse(c *gin.Context) {
 		"message": "success",
 	})
 }
+
+func NotFound(c *gin.Context) {
+	c.JSON(404, gin.H{
+		"error":   true,
+		"message": "Not found route",
+	})
+}
