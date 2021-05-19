@@ -19,7 +19,7 @@ func GetCollection(collection string) *mongo.Collection {
 
 	utils.CheckErrors(err, "1", "The connection to the database failed", "Please check if the URI value in the .env is valid")
 
-	database := client.Database("community-api")
+	database := client.Database("moldy-api")
 
 	return database.Collection(collection)
 }
