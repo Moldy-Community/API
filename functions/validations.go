@@ -14,8 +14,8 @@ import (
 var packageCollection = database.GetCollection("packages")
 
 func RepeatedData(name string) bool {
-	var structure models.Package
-	err := packageCollection.FindOne(context.TODO(), primitive.D{{Key: "Name", Value: name}}).Decode(&structure)
+	var structure = models.Package{}
+	err := packageCollection.FindOne(context.TODO(), primitive.D{{Key: "name", Value: name}}).Decode(&structure)
 
 	if err != nil {
 		return false

@@ -60,6 +60,7 @@ func NewPackage(c *gin.Context) {
 			"error":   true,
 			"message": "The name of this package was used before",
 		})
+		return
 	}
 
 	re := regexp.MustCompile(`[^0-9|.]`)
