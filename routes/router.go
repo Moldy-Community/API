@@ -7,7 +7,6 @@ import (
 )
 
 func Router(route *gin.Engine) {
-	r := gin.Default()
 	main := route.Group("/")
 	{
 		main.GET("/", routes.GetResponse)
@@ -19,5 +18,5 @@ func Router(route *gin.Engine) {
 		packages.POST("/new", routes.NewPackage)
 	}
 
-	r.NoRoute(routes.NotFound)
+	route.NoRoute(routes.NotFound)
 }
