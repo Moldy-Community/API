@@ -3,6 +3,7 @@ package routes
 import (
 	"context"
 	"moldy-api/database"
+	"moldy-api/functions"
 	"moldy-api/models"
 	"moldy-api/utils"
 	"net/url"
@@ -76,12 +77,19 @@ func NewPackage(c *gin.Context) {
 		return
 	}
 
-	if reqBody.Author == "" || reqBody.Description == "" || reqBody.Name == "" || reqBody.Url == "" {
+	if reqBody.Author == "" || reqBody.Description == "" || reqBody.Name == "" || reqBody.Url == "" || reqBody.Password == "" {
 		c.JSON(411, gin.H{
 			"error":   true,
 			"message": "Please fill all blanks",
 		})
 		return
+	}
+
+	if len(reqBody.Password) < 6 {
+		c.JSON(411, gin.H{
+			"error":   true,
+			"message": "Write a password more long (6+ Characters)",
+		})
 	}
 
 	if len(reqBody.Author) >= 30 {
@@ -110,14 +118,24 @@ func NewPackage(c *gin.Context) {
 		return
 	}
 
+	reqBody.Password = functions.Encrypt(reqBody.Password)
+
 	_, err = packageCollection.InsertOne(context.Background(), reqBody)
 
 	utils.CheckErrors(err, "code 4", "Failed to save in the collection", "Unknown solution")
 
+	formated := &models.Format{
+		Name:        reqBody.Name,
+		Author:      reqBody.Author,
+		Url:         reqBody.Url,
+		Description: reqBody.Description,
+		Version:     reqBody.Version,
+	}
+
 	c.JSON(200, gin.H{
 		"error":   false,
 		"message": "Created successfully",
-		"data":    reqBody,
+		"data":    formated,
 	})
 
 }
