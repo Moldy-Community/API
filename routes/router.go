@@ -16,6 +16,8 @@ func Router(route *gin.Engine) {
 	{
 		packages.GET("/all", routes.GetAll)
 		packages.POST("/new", routes.NewPackage)
+		packages.PUT("/update/:id", routes.UpdatePackage)
+		packages.DELETE("/delete/:id", routes.DeleteOne)
 	}
 
 	route.NoRoute(routes.NotFound)
