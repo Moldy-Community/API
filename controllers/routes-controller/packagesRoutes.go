@@ -26,7 +26,7 @@ func GetAll(c *gin.Context) {
 	utils.CheckErrors(err, "code 4", "Search finished", "No solution. The search finish")
 
 	for cursor.Next(context.Background()) {
-		var pkg models.Package
+		var pkg models.Format
 		err = cursor.Decode(&pkg)
 
 		utils.CheckErrors(err, "code 4", "Search finished", "No solution. The search finish")

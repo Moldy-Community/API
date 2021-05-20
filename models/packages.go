@@ -32,4 +32,4 @@ type AuthPassword struct {
 	Password string `json:"password" bson:"password"`
 }
 
-type Packages []*Package
+type Packages []*Format
