@@ -1,7 +1,7 @@
 package routes
 
 import (
-	mainController "moldy-api/controllers/main-routes"
+	routes "moldy-api/controllers/routes-controller"
 
 	"github.com/gin-gonic/gin"
 )
@@ -9,6 +9,16 @@ import (
 func Router(route *gin.Engine) {
 	main := route.Group("/")
 	{
-		main.GET("/", mainController.GetResponse)
+		main.GET("/", routes.GetResponse)
 	}
+
+	packages := route.Group("/api/v1/packages")
+	{
+		packages.GET("/all", routes.GetAll)
+		packages.POST("/new", routes.NewPackage)
+		packages.PUT("/update/:id", routes.UpdatePackage)
+		packages.DELETE("/delete/:id", routes.DeleteOne)
+	}
+
+	route.NoRoute(routes.NotFound)
 }
