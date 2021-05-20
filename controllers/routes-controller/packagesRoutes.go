@@ -11,6 +11,8 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -49,6 +51,15 @@ func NewPackage(c *gin.Context) {
 			"message": "The request was invalid",
 		})
 		return
+	}
+
+	repeatedName := functions.RepeatedData(reqBody.Name)
+
+	if repeatedName {
+		c.JSON(409, gin.H{
+			"error":   true,
+			"message": "The name of this package was used before",
+		})
 	}
 
 	re := regexp.MustCompile(`[^0-9|.]`)
@@ -119,12 +130,14 @@ func NewPackage(c *gin.Context) {
 	}
 
 	reqBody.Password = functions.Encrypt(reqBody.Password)
+	reqBody.ID = uuid.New().String()
 
 	_, err = packageCollection.InsertOne(context.Background(), reqBody)
 
 	utils.CheckErrors(err, "code 4", "Failed to save in the collection", "Unknown solution")
 
 	formated := &models.Format{
+		ID:          reqBody.ID,
 		Name:        reqBody.Name,
 		Author:      reqBody.Author,
 		Url:         reqBody.Url,
@@ -138,4 +151,100 @@ func NewPackage(c *gin.Context) {
 		"data":    formated,
 	})
 
+}
+
+func UpdatePackage(c *gin.Context) {
+	id := c.Param("id")
+
+	var reqBody models.PackageUpdate
+
+	if err := c.ShouldBindJSON(&reqBody); err != nil {
+		c.JSON(422, gin.H{
+			"error":   true,
+			"message": "The request was invalid",
+		})
+		return
+	}
+
+	matchPasswords := functions.SamePassword(reqBody.Password, id)
+
+	if !matchPasswords {
+		c.JSON(403, gin.H{
+			"error":   true,
+			"message": "The password not is correct",
+		})
+		return
+	}
+
+	reqBody.Password = functions.Encrypt(reqBody.Password)
+
+	filter := bson.M{"id": id}
+
+	update := bson.M{
+		"$set": bson.M{
+			"name":        reqBody.Name,
+			"description": reqBody.Description,
+			"author":      reqBody.Author,
+			"password":    reqBody.Password,
+			"url":         reqBody.Url,
+			"version":     reqBody.Version,
+		},
+	}
+
+	_, err := packageCollection.UpdateOne(context.TODO(), filter, update)
+
+	utils.CheckErrors(err, "code 4", "The package failed to be updated", "Try again and watch if the ID is correct")
+
+	if err != nil {
+		c.JSON(500, gin.H{
+			"error":   true,
+			"message": "The package cannot be updated for some unknown reason",
+		})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"error":   false,
+		"message": "The package was updated succesfully",
+	})
+}
+
+func DeleteOne(c *gin.Context) {
+	id := c.Param("id")
+	var reqBody models.AuthPassword
+
+	if err := c.ShouldBindJSON(&reqBody); err != nil {
+		c.JSON(422, gin.H{
+			"error":   true,
+			"message": "The request was invalid",
+		})
+		return
+	}
+
+	matchPasswords := functions.SamePassword(reqBody.Password, id)
+
+	if !matchPasswords {
+		c.JSON(403, gin.H{
+			"error":   true,
+			"message": "The id or the password is not correct",
+		})
+		return
+	}
+
+	_, err := packageCollection.DeleteOne(context.TODO(), primitive.M{"id": id})
+
+	utils.CheckErrors(err, "code 4", "Something happen in the db and cannot be deleted the package", "Unknown solution")
+
+	if err != nil {
+		c.JSON(500, gin.H{
+			"error":   true,
+			"message": "Something bad happen, the package was cannot deleted",
+		})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"error":   false,
+		"message": "The package was deleted successfully",
+	})
 }
