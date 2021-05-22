@@ -15,6 +15,7 @@ func Router(route *gin.Engine) {
 	packages := route.Group("/api/v1/packages")
 	{
 		packages.GET("/all", routes.GetAll)
+		packages.GET("/search", routes.SearchMany)
 		packages.POST("/new", routes.NewPackage)
 		packages.PUT("/update/:id", routes.UpdatePackage)
 		packages.DELETE("/delete/:id", routes.DeleteOne)
