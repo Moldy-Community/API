@@ -250,6 +250,27 @@ func DeleteOne(c *gin.Context) {
 	})
 }
 
+func SearchId(c *gin.Context) {
+	var structure models.Format
+	id := c.Param("id")
+
+	err := packageCollection.FindOne(context.TODO(), primitive.D{{Key: "id", Value: id}}).Decode(&structure)
+
+	if err != nil {
+		c.JSON(404, gin.H{
+			"error":   true,
+			"message": "The package not was found by this ID, please verify if is correct.",
+		})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"error":   false,
+		"message": "Success search by ID",
+		"data":    structure,
+	})
+}
+
 func SearchMany(c *gin.Context) {
 	name, found := c.GetQuery("key")
 
