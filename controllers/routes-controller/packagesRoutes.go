@@ -249,3 +249,58 @@ func DeleteOne(c *gin.Context) {
 		"message": "The package was deleted successfully",
 	})
 }
+
+func SearchId(c *gin.Context) {
+	var structure models.Format
+	id := c.Param("id")
+
+	err := packageCollection.FindOne(context.TODO(), primitive.D{{Key: "id", Value: id}}).Decode(&structure)
+
+	if err != nil {
+		c.JSON(404, gin.H{
+			"error":   true,
+			"message": "The package not was found by this ID, please verify if is correct.",
+		})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"error":   false,
+		"message": "Success search by ID",
+		"data":    structure,
+	})
+}
+
+func SearchMany(c *gin.Context) {
+	name, found := c.GetQuery("key")
+
+	if !found {
+		c.JSON(422, gin.H{
+			"error":   true,
+			"message": "Bad request, please provide a query param",
+		})
+		return
+	}
+
+	var allData models.Packages
+
+	cursor, err := packageCollection.Find(context.TODO(), bson.M{"name": bson.M{"$regex": `(?i)` + name}})
+
+	utils.CheckErrors(err, "code 4", "Search finished", "No solution. The search finish")
+
+	for cursor.Next(context.Background()) {
+		var pkg models.Format
+		err = cursor.Decode(&pkg)
+
+		utils.CheckErrors(err, "code 4", "Search finished", "No solution. The search finish")
+
+		allData = append(allData, &pkg)
+	}
+
+	c.JSON(200, gin.H{
+		"error":   false,
+		"message": "Success search",
+		"data":    allData,
+	})
+
+}
