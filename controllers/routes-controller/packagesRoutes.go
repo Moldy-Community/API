@@ -249,3 +249,37 @@ func DeleteOne(c *gin.Context) {
 		"message": "The package was deleted successfully",
 	})
 }
+
+func SearchMany(c *gin.Context) {
+	name, found := c.GetQuery("key")
+
+	if !found {
+		c.JSON(422, gin.H{
+			"error":   true,
+			"message": "Bad request, please provide a query param",
+		})
+		return
+	}
+
+	var allData models.Packages
+
+	cursor, err := packageCollection.Find(context.TODO(), bson.M{"name": bson.M{"$regex": `(?i)` + name}})
+
+	utils.CheckErrors(err, "code 4", "Search finished", "No solution. The search finish")
+
+	for cursor.Next(context.Background()) {
+		var pkg models.Format
+		err = cursor.Decode(&pkg)
+
+		utils.CheckErrors(err, "code 4", "Search finished", "No solution. The search finish")
+
+		allData = append(allData, &pkg)
+	}
+
+	c.JSON(200, gin.H{
+		"error":   false,
+		"message": "Success search",
+		"data":    allData,
+	})
+
+}
