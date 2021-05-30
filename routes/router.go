@@ -16,6 +16,7 @@ func Router(route *gin.Engine) {
 	{
 		packages.GET("/all", routes.GetAll)
 		packages.GET("/search", routes.SearchMany)
+		packages.GET("/search/one", routes.SearchOne)
 		packages.GET("/:id", routes.SearchId)
 		packages.POST("/new", routes.NewPackage)
 		packages.PUT("/update/:id", routes.UpdatePackage)
