@@ -49,6 +49,7 @@ func NewPackage(c *gin.Context) {
 		c.JSON(422, gin.H{
 			"error":   true,
 			"message": "The request was invalid",
+			"data":    nil,
 		})
 		return
 	}
@@ -59,6 +60,7 @@ func NewPackage(c *gin.Context) {
 		c.JSON(409, gin.H{
 			"error":   true,
 			"message": "The name of this package was used before",
+			"data":    nil,
 		})
 		return
 	}
@@ -71,6 +73,7 @@ func NewPackage(c *gin.Context) {
 		c.JSON(406, gin.H{
 			"error":   true,
 			"message": "Please provide a valid version (Only numbers and dot's)",
+			"data":    nil,
 		})
 		return
 	}
@@ -78,13 +81,15 @@ func NewPackage(c *gin.Context) {
 	if len(reqBody.Version) > 5 {
 		c.JSON(411, gin.H{
 			"error":   true,
-			"message": "The length is too long",
+			"message": "The length of the blank <version> is too long",
+			"data":    nil,
 		})
 		return
 	} else if len(reqBody.Version) < 3 {
 		c.JSON(411, gin.H{
 			"error":   true,
 			"message": "The version is too short, remind that the format is X.Y or X.Y.Z",
+			"data":    nil,
 		})
 		return
 	}
@@ -93,6 +98,7 @@ func NewPackage(c *gin.Context) {
 		c.JSON(411, gin.H{
 			"error":   true,
 			"message": "Please fill all blanks",
+			"data":    nil,
 		})
 		return
 	}
@@ -101,6 +107,7 @@ func NewPackage(c *gin.Context) {
 		c.JSON(411, gin.H{
 			"error":   true,
 			"message": "Write a password more long (6+ Characters)",
+			"data":    nil,
 		})
 	}
 
@@ -108,6 +115,7 @@ func NewPackage(c *gin.Context) {
 		c.JSON(411, gin.H{
 			"error":   true,
 			"message": "Please enter a valid author with less of 30 characters",
+			"data":    nil,
 		})
 		return
 	}
@@ -116,6 +124,7 @@ func NewPackage(c *gin.Context) {
 		c.JSON(411, gin.H{
 			"error":   true,
 			"message": "The description is too long and have more of 150 characters, please write it more short",
+			"data":    nil,
 		})
 		return
 	}
@@ -163,6 +172,7 @@ func UpdatePackage(c *gin.Context) {
 		c.JSON(422, gin.H{
 			"error":   true,
 			"message": "The request was invalid",
+			"data":    nil,
 		})
 		return
 	}
@@ -173,6 +183,7 @@ func UpdatePackage(c *gin.Context) {
 		c.JSON(403, gin.H{
 			"error":   true,
 			"message": "The password not is correct",
+			"data":    nil,
 		})
 		return
 	}
@@ -200,6 +211,7 @@ func UpdatePackage(c *gin.Context) {
 		c.JSON(500, gin.H{
 			"error":   true,
 			"message": "The package cannot be updated for some unknown reason",
+			"data":    nil,
 		})
 		return
 	}
@@ -207,6 +219,14 @@ func UpdatePackage(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"error":   false,
 		"message": "The package was updated succesfully",
+		"data": models.Format{
+			ID:          id,
+			Name:        reqBody.Name,
+			Author:      reqBody.Author,
+			Url:         reqBody.Url,
+			Description: reqBody.Description,
+			Version:     reqBody.Version,
+		},
 	})
 }
 
@@ -218,6 +238,7 @@ func DeleteOne(c *gin.Context) {
 		c.JSON(422, gin.H{
 			"error":   true,
 			"message": "The request was invalid",
+			"data":    nil,
 		})
 		return
 	}
@@ -228,6 +249,7 @@ func DeleteOne(c *gin.Context) {
 		c.JSON(403, gin.H{
 			"error":   true,
 			"message": "The id or the password is not correct",
+			"data":    nil,
 		})
 		return
 	}
@@ -240,13 +262,15 @@ func DeleteOne(c *gin.Context) {
 		c.JSON(500, gin.H{
 			"error":   true,
 			"message": "Something bad happen, the package was cannot deleted",
+			"data":    nil,
 		})
 		return
 	}
 
 	c.JSON(200, gin.H{
 		"error":   false,
-		"message": "The package was deleted successfully",
+		"message": "The package with the id " + id + " was deleted successfully",
+		"data":    nil,
 	})
 }
 
@@ -260,6 +284,7 @@ func SearchId(c *gin.Context) {
 		c.JSON(404, gin.H{
 			"error":   true,
 			"message": "The package not was found by this ID, please verify if is correct.",
+			"data":    nil,
 		})
 		return
 	}
@@ -278,6 +303,7 @@ func SearchMany(c *gin.Context) {
 		c.JSON(422, gin.H{
 			"error":   true,
 			"message": "Bad request, please provide a query param",
+			"data":    nil,
 		})
 		return
 	}
