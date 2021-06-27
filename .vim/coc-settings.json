@@ -1,0 +1,14 @@
+{
+  "tsserver.enable": false,
+  "deno.enable": true,
+  "deno.lint": true,
+  "coc.source.file.trimSameExts": [],
+  "prettier.disableLanguage": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
+  "deno.unstable": true,
+  "deno.importMap": "./import-map.json"
+}
