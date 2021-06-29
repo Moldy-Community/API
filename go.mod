@@ -8,5 +8,5 @@ require (
 	github.com/google/uuid v1.2.0
 	github.com/joho/godotenv v1.3.0
 	go.mongodb.org/mongo-driver v1.5.3
-	go.uber.org/zap v1.16.0
+	go.uber.org/zap v1.18.1
 )
