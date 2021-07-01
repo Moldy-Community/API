@@ -12,15 +12,25 @@ func Router(route *gin.Engine) {
 		main.GET("/", routes.GetResponse)
 	}
 
+	packagesAuth := route.Group("/api/v1/packages", routes.AuthUser)
+	{
+		packagesAuth.POST("/new", routes.NewPackage)
+		packagesAuth.PUT("/update/:id", routes.UpdatePackage)
+		packagesAuth.DELETE("/delete/:id", routes.DeleteOne)
+	}
+
 	packages := route.Group("/api/v1/packages")
 	{
 		packages.GET("/all", routes.GetAll)
 		packages.GET("/search", routes.SearchMany)
 		packages.GET("/search/one", routes.SearchOne)
 		packages.GET("/:id", routes.SearchId)
-		packages.POST("/new", routes.NewPackage)
-		packages.PUT("/update/:id", routes.UpdatePackage)
-		packages.DELETE("/delete/:id", routes.DeleteOne)
+	}
+
+	users := route.Group("/")
+	{
+		users.POST("/signup", routes.SignUp)
+		users.POST("/login", routes.Login)
 	}
 
 	route.NoRoute(routes.NotFound)
