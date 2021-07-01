@@ -4,7 +4,6 @@ import (
 	"context"
 	"moldy-api/database"
 	"moldy-api/models"
-	"moldy-api/utils"
 	"strings"
 
 	"github.com/alexedwards/argon2id"
@@ -12,8 +11,9 @@ import (
 )
 
 var packageCollection = database.GetCollection("packages")
+var userCollection = database.GetCollection("users")
 
-func RepeatedData(name string) bool {
+func RepeatedPackage(name string) bool {
 	var structure = models.Package{}
 	err := packageCollection.FindOne(context.TODO(), primitive.D{{Key: "name", Value: name}}).Decode(&structure)
 
@@ -24,15 +24,27 @@ func RepeatedData(name string) bool {
 	return strings.EqualFold(structure.Name, name)
 }
 
-func SamePassword(password, id string) bool {
-	var structure models.Package
-	err := packageCollection.FindOne(context.TODO(), primitive.D{{Key: "id", Value: id}}).Decode(&structure)
+func RepeatedUser(name string) bool {
 
-	utils.CheckErrors(err, "code 4", "The package not was found", "Verify the ID provided")
+	var structure = models.User{}
+	err := userCollection.FindOne(context.TODO(), primitive.D{{Key: "name", Value: name}}).Decode(&structure)
 
-	match, err := argon2id.ComparePasswordAndHash(password, structure.Password)
+	if err != nil {
+		return false
+	}
 
-	utils.CheckErrors(err, "code 5", "Unknown error validating the password", "Unknown solution")
+	return strings.EqualFold(structure.Name, name)
+}
 
-	return match
+func SamePassword(password, email string) (bool, string) {
+	var structure models.User
+	err := userCollection.FindOne(context.TODO(), primitive.D{{Key: "email", Value: email}}).Decode(&structure)
+
+	if err != nil {
+		return false, ""
+	}
+
+	match, _ := argon2id.ComparePasswordAndHash(password, structure.Password)
+
+	return match, structure.Name
 }
