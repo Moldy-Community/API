@@ -2,6 +2,7 @@ package routes
 
 import (
 	"context"
+	"fmt"
 	"moldy-api/database"
 	"moldy-api/functions"
 	"moldy-api/models"
@@ -11,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -145,7 +147,7 @@ func NewPackage(c *gin.Context) {
 		return
 	}
 
-	repeatedName := functions.RepeatedData(reqBody.Name)
+	repeatedName := functions.RepeatedPackage(reqBody.Name)
 
 	if repeatedName {
 		c.JSON(409, gin.H{
@@ -185,27 +187,10 @@ func NewPackage(c *gin.Context) {
 		return
 	}
 
-	if reqBody.Author == "" || reqBody.Description == "" || reqBody.Name == "" || reqBody.Url == "" || reqBody.Password == "" {
+	if reqBody.Description == "" || reqBody.Name == "" || reqBody.Url == "" {
 		c.JSON(411, gin.H{
 			"error":   true,
 			"message": "Please fill all blanks",
-			"data":    nil,
-		})
-		return
-	}
-
-	if len(reqBody.Password) < 6 {
-		c.JSON(411, gin.H{
-			"error":   true,
-			"message": "Write a password more long (6+ Characters)",
-			"data":    nil,
-		})
-	}
-
-	if len(reqBody.Author) >= 30 {
-		c.JSON(411, gin.H{
-			"error":   true,
-			"message": "Please enter a valid author with less of 30 characters",
 			"data":    nil,
 		})
 		return
@@ -230,12 +215,29 @@ func NewPackage(c *gin.Context) {
 		return
 	}
 
-	reqBody.Password = functions.Encrypt(reqBody.Password)
 	reqBody.ID = uuid.New().String()
+
+	token := c.Request.Header.Get("token")
+	validatedToken, _ := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+		}
+
+		return []byte(utils.GetEnv("JWT_SIGN")), nil
+	})
+	claims, _ := validatedToken.Claims.(jwt.MapClaims)
+	reqBody.Author = string(claims["name"].(string))
 
 	_, err = packageCollection.InsertOne(context.Background(), reqBody)
 
-	utils.CheckErrors(err, "code 4", "Failed to save in the collection", "Unknown solution")
+	if err != nil {
+		c.JSON(500, gin.H{
+			"error":   true,
+			"message": "Something bad happened when the data was saved",
+			"data":    nil,
+		})
+		return
+	}
 
 	formated := &models.Format{
 		ID:          reqBody.ID,
@@ -268,18 +270,16 @@ func UpdatePackage(c *gin.Context) {
 		return
 	}
 
-	matchPasswords := functions.SamePassword(reqBody.Password, id)
+	token := c.Request.Header.Get("token")
+	validatedToken, _ := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+		}
 
-	if !matchPasswords {
-		c.JSON(403, gin.H{
-			"error":   true,
-			"message": "The password not is correct",
-			"data":    nil,
-		})
-		return
-	}
-
-	reqBody.Password = functions.Encrypt(reqBody.Password)
+		return []byte(utils.GetEnv("JWT_SIGN")), nil
+	})
+	claims, _ := validatedToken.Claims.(jwt.MapClaims)
+	reqBody.Author = string(claims["name"].(string))
 
 	filter := bson.M{"id": id}
 
@@ -288,7 +288,6 @@ func UpdatePackage(c *gin.Context) {
 			"name":        reqBody.Name,
 			"description": reqBody.Description,
 			"author":      reqBody.Author,
-			"password":    reqBody.Password,
 			"url":         reqBody.Url,
 			"version":     reqBody.Version,
 		},
@@ -296,7 +295,13 @@ func UpdatePackage(c *gin.Context) {
 
 	_, err := packageCollection.UpdateOne(context.TODO(), filter, update)
 
-	utils.CheckErrors(err, "code 4", "The package failed to be updated", "Try again and watch if the ID is correct")
+	if err != nil {
+		c.JSON(500, gin.H{
+			"error":   true,
+			"message": "Something bad happened when the data was attempted to save",
+			"data":    nil,
+		})
+	}
 
 	if err != nil {
 		c.JSON(500, gin.H{
@@ -322,32 +327,31 @@ func UpdatePackage(c *gin.Context) {
 }
 
 func DeleteOne(c *gin.Context) {
+	var structure models.Package
 	id := c.Param("id")
-	var reqBody models.AuthPassword
 
-	if err := c.ShouldBindJSON(&reqBody); err != nil {
-		c.JSON(422, gin.H{
-			"error":   true,
-			"message": "The request was invalid",
-			"data":    nil,
-		})
-		return
-	}
+	err := userCollection.FindOne(context.TODO(), primitive.D{{Key: "id", Value: id}}).Decode(&structure)
 
-	matchPasswords := functions.SamePassword(reqBody.Password, id)
+	token := c.Request.Header.Get("token")
+	validatedToken, _ := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+		}
 
-	if !matchPasswords {
+		return []byte(utils.GetEnv("JWT_SIGN")), nil
+	})
+	claims, _ := validatedToken.Claims.(jwt.MapClaims)
+
+	if structure.Author != string(claims["name"].(string)) {
 		c.JSON(403, gin.H{
 			"error":   true,
-			"message": "The id or the password is not correct",
+			"message": "Unauthorized",
 			"data":    nil,
 		})
 		return
 	}
 
-	_, err := packageCollection.DeleteOne(context.TODO(), primitive.M{"id": id})
-
-	utils.CheckErrors(err, "code 4", "Something happen in the db and cannot be deleted the package", "Unknown solution")
+	_, err = packageCollection.DeleteOne(context.TODO(), primitive.M{"id": id})
 
 	if err != nil {
 		c.JSON(500, gin.H{
