@@ -21,9 +21,7 @@ func Router(route *gin.Engine) {
 
 	packages := route.Group("/api/v1/packages")
 	{
-		packages.GET("/all", routes.GetAll)
 		packages.GET("/search", routes.SearchMany)
-		packages.GET("/search/one", routes.SearchOne)
 		packages.GET("/:id", routes.SearchId)
 	}
 
@@ -32,6 +30,8 @@ func Router(route *gin.Engine) {
 		users.POST("/signup", routes.SignUp)
 		users.POST("/login", routes.Login)
 	}
+
+	route.GET("/validate-token", routes.ValidToken)
 
 	route.NoRoute(routes.NotFound)
 }
