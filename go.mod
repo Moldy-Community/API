@@ -8,6 +8,6 @@ require (
 	github.com/golang-jwt/jwt v3.2.1+incompatible
 	github.com/google/uuid v1.3.0
 	github.com/joho/godotenv v1.3.0
-	go.mongodb.org/mongo-driver v1.5.4
+	go.mongodb.org/mongo-driver v1.7.0
 	go.uber.org/zap v1.18.1
 )
